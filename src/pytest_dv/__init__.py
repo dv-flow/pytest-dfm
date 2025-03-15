@@ -1,6 +1,8 @@
 import os
 import pytest
 
+from .dv_flow import DvFlow
+
 @pytest.fixture
 def dvflow(request, tmpdir):
     from .dv_flow import DvFlow
