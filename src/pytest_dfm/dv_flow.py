@@ -3,7 +3,7 @@ import os
 import dataclasses as dc
 import logging
 from pytest import FixtureRequest
-from dv_flow.mgr import TaskGraphBuilder, TaskSetRunner
+from dv_flow.mgr import PackageLoader, TaskGraphBuilder, TaskSetRunner
 from typing import ClassVar
 
 @dc.dataclass
@@ -23,7 +23,9 @@ class DvFlow(object):
         self.builder.addOverride(key, value)
 
     def loadPkg(self, pkgfile):
-        self.builder.loadPkg(pkgfile)
+        loader = PackageLoader()
+        pkg = loader.load(pkgfile)
+        self.builder = TaskGraphBuilder(pkg, self.tmpdir, loader=loader)
 
     def mkTask(self, 
                    task_t,
@@ -31,7 +33,12 @@ class DvFlow(object):
                    srcdir=None,
                    needs=None,
                    **kwargs):
-        return self.builder.mkTaskNode(task_t, name, srcdir, needs, **kwargs)
+        return self.builder.mkTaskNode(
+            task_t, 
+            name=name, 
+            srcdir=srcdir, 
+            needs=needs, 
+            **kwargs)
 
     def runTask(self, 
                 task, 
