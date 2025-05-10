@@ -13,7 +13,7 @@ dependencies = [
 authors = [
     {name = "Matthew Ballance", email = "matt.ballance@gmail.com"},
 ]
-description = "DV Flow Manager is a build system for silicon design"
+description = "pytest-dfm provides a pytest integration for DV Flow Manager, a build system for silicon design"
 license = {file = "LICENSE" }
 
 #[project.scripts]

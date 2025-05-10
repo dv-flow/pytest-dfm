@@ -1,0 +1,13 @@
+package:
+  name: pytest-dfm
+
+  dep-sets:
+  - name: default-dev
+    deps:
+    - name: pytest
+      src: pypi
+    - name: Sphinx
+      src: pypi
+    - name: dv-flow-mgr
+      url: https://github.com/dv-flow/dv-flow-mgr.git
+
