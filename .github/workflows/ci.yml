@@ -11,6 +11,7 @@ jobs:
         version_dir: "src/pytest_dfm"
         tests_dir: "tests"
         run_tests: false
+        build_docs: true
         pythonpath: "$(pwd)/src"
     secrets:
         PYPI_API_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
