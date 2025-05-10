@@ -19,10 +19,11 @@ class DvFlow(object):
         self.srcdir = os.path.dirname(self.request.fspath)
         pass
 
-    def addOverride(self, key, value):
-        self.builder.addOverride(key, value)
+#    def addOverride(self, key, value):
+#        self.builder.addOverride(key, value)
 
     def loadPkg(self, pkgfile):
+        """Loads the specified flow.dv file as th root package"""
         loader = PackageLoader()
         pkg = loader.load(pkgfile)
         self.builder = TaskGraphBuilder(pkg, self.tmpdir, loader=loader)
@@ -33,6 +34,7 @@ class DvFlow(object):
                    srcdir=None,
                    needs=None,
                    **kwargs):
+        """Creates a task of the specified type"""
         return self.builder.mkTaskNode(
             task_t, 
             name=name, 
@@ -44,6 +46,7 @@ class DvFlow(object):
                 task, 
                 listener=None,
                 nproc=-1):
+        """Executes the specified tree of task nodes"""
         markers = []
         runner = TaskSetRunner(self.tmpdir)
 
