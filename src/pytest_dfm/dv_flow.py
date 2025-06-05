@@ -3,7 +3,7 @@ import os
 import dataclasses as dc
 import logging
 from pytest import FixtureRequest
-from dv_flow.mgr import PackageLoader, TaskGraphBuilder, TaskSetRunner
+from dv_flow.mgr import PackageLoader, TaskGraphBuilder, TaskSetRunner, SeverityE
 from typing import ClassVar
 
 @dc.dataclass
@@ -15,7 +15,13 @@ class DvFlow(object):
     _log : ClassVar = logging.getLogger("DvFlow")
 
     def __post_init__(self):
-        loader = PackageLoader()
+        def marker(m):
+            """Marker listener to collect markers"""
+            if m.severity == SeverityE.Error:
+                self._log.error("Marker: %s" % m.msg)
+            else:
+                self._log.debug("Marker: %s" % m.msg)
+        loader = PackageLoader(marker_listeners=[marker])
         self.builder = TaskGraphBuilder(None, self.tmpdir, loader=loader)
         self.srcdir = os.path.dirname(self.request.fspath)
         pass
@@ -25,9 +31,20 @@ class DvFlow(object):
 
     def loadPkg(self, pkgfile):
         """Loads the specified flow.dv file as th root package"""
-        loader = PackageLoader()
+        def marker(m):
+            """Marker listener to collect markers"""
+            if m.severity == SeverityE.Error:
+                self._log.error("Marker: %s" % m.msg)
+            else:
+                self._log.debug("Marker: %s" % m.msg)
+
+        loader = PackageLoader(marker_listeners=[marker])
         pkg = loader.load(pkgfile)
-        self.builder = TaskGraphBuilder(pkg, self.tmpdir, loader=loader)
+        self.builder = TaskGraphBuilder(
+            pkg, 
+            self.tmpdir, 
+            loader=loader,
+            marker_l=marker)
 
     def setEnv(self, env):
         """Sets the environment for the task graph"""
