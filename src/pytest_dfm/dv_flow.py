@@ -15,7 +15,8 @@ class DvFlow(object):
     _log : ClassVar = logging.getLogger("DvFlow")
 
     def __post_init__(self):
-        self.builder = TaskGraphBuilder(None, self.tmpdir)
+        loader = PackageLoader()
+        self.builder = TaskGraphBuilder(None, self.tmpdir, loader=loader)
         self.srcdir = os.path.dirname(self.request.fspath)
         pass
 
@@ -27,6 +28,13 @@ class DvFlow(object):
         loader = PackageLoader()
         pkg = loader.load(pkgfile)
         self.builder = TaskGraphBuilder(pkg, self.tmpdir, loader=loader)
+
+    def setEnv(self, env):
+        """Sets the environment for the task graph"""
+        if self.builder is not None:
+            self.builder.setEnv(env)
+        else:
+            raise Exception("Task graph builder not initialized")
 
     def mkTask(self, 
                    task_t,
@@ -48,7 +56,9 @@ class DvFlow(object):
                 nproc=-1):
         """Executes the specified tree of task nodes"""
         markers = []
-        runner = TaskSetRunner(self.tmpdir)
+        runner = TaskSetRunner(
+            self.tmpdir,
+            builder=self.builder)
 
         def local_listener(task, reason):
             if reason == "leave":
