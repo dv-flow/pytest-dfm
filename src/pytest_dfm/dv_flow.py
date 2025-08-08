@@ -3,8 +3,9 @@ import os
 import dataclasses as dc
 import logging
 from pytest import FixtureRequest
-from dv_flow.mgr import PackageLoader, TaskGraphBuilder, TaskSetRunner
+from dv_flow.mgr import PackageLoader, TaskGraphBuilder, TaskSetRunner, SeverityE, TaskMarker
 from typing import ClassVar
+from .impl.ext_rgy import ExtRgy
 
 @dc.dataclass
 class DvFlow(object):
@@ -12,20 +13,26 @@ class DvFlow(object):
     srcdir : str
     tmpdir: str
     builder : TaskGraphBuilder = dc.field(default=None)
+    ext_rgy : ExtRgy = dc.field(default_factory=ExtRgy)
+
     _log : ClassVar = logging.getLogger("DvFlow")
 
     def __post_init__(self):
-        loader = PackageLoader()
+        loader = PackageLoader(pkg_rgy=self.ext_rgy)
         self.builder = TaskGraphBuilder(None, self.tmpdir, loader=loader)
         self.srcdir = os.path.dirname(self.request.fspath)
         pass
+
+    def addPackage(self, name, pkgfile):
+        """Adds a package to the task graph builder"""
+        self.ext_rgy.addPackage(name, pkgfile)
 
 #    def addOverride(self, key, value):
 #        self.builder.addOverride(key, value)
 
     def loadPkg(self, pkgfile):
         """Loads the specified flow.dv file as th root package"""
-        loader = PackageLoader()
+        loader = PackageLoader(pkg_rgy=self.ext_rgy)
         pkg = loader.load(pkgfile)
         self.builder = TaskGraphBuilder(pkg, self.tmpdir, loader=loader)
 
@@ -76,7 +83,20 @@ class DvFlow(object):
 
         # Display markers
         for m in markers:
-            print("Marker: %s" % m.msg)
+            path = None
+            if m.loc is not None:
+                path = m.loc.path
+                if m.loc.line != -1:
+                    path += ":%d" % m.loc.line
+                if m.loc.pos != -1:
+                    path += ":%d" % m.loc.pos
+
+            if m.severity == SeverityE.Error:
+                self._log.error("%s %s" % (m.msg, (path if path is not None else "")))
+            elif m.severity == SeverityE.Warning:
+                self._log.warning("%s %s" % (m.msg, (path if path is not None else "")))
+            elif m.severity == SeverityE.Info:
+                self._log.info("%s %s" % (m.msg, (path if path is not None else "")))
 
         return (runner.status, ret)
 
