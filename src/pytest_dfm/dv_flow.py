@@ -34,7 +34,10 @@ class DvFlow(object):
         """Loads the specified flow.dv file as th root package"""
         loader = PackageLoader(pkg_rgy=self.ext_rgy)
         pkg = loader.load(pkgfile)
-        self.builder = TaskGraphBuilder(pkg, self.tmpdir, loader=loader)
+        self.builder = TaskGraphBuilder(
+            root_pkg=pkg, 
+            rundir=os.path.join(self.tmpdir, "rundir"), 
+            loader=loader)
 
     def setEnv(self, env):
         """Sets the environment for the task graph"""
@@ -56,6 +59,11 @@ class DvFlow(object):
             srcdir=srcdir, 
             needs=needs, 
             **kwargs)
+    
+    def runFlow(self, root, task, listener=None, nproc=-1):
+        self.loadPkg(root)
+        root_task = self.mkTask(task)
+        return self.runTask(root_task, listener, nproc)
 
     def runTask(self, 
                 task, 
