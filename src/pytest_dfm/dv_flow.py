@@ -30,14 +30,15 @@ class DvFlow(object):
 #    def addOverride(self, key, value):
 #        self.builder.addOverride(key, value)
 
-    def loadPkg(self, pkgfile):
+    def loadPkg(self, pkgfile, env=None):
         """Loads the specified flow.dv file as th root package"""
-        loader = PackageLoader(pkg_rgy=self.ext_rgy)
+        loader = PackageLoader(pkg_rgy=self.ext_rgy, env=env)
         pkg = loader.load(pkgfile)
         self.builder = TaskGraphBuilder(
             root_pkg=pkg, 
             rundir=os.path.join(self.tmpdir, "rundir"), 
-            loader=loader)
+            loader=loader,
+            env=env)
 
     def setEnv(self, env):
         """Sets the environment for the task graph"""
@@ -60,8 +61,8 @@ class DvFlow(object):
             needs=needs, 
             **kwargs)
     
-    def runFlow(self, root, task, listener=None, nproc=-1):
-        self.loadPkg(root)
+    def runFlow(self, root, task, listener=None, nproc=-1, env=None):
+        self.loadPkg(root, env=env)
         root_task = self.mkTask(task)
         return self.runTask(root_task, listener, nproc)
 
@@ -73,7 +74,8 @@ class DvFlow(object):
         markers = []
         runner = TaskSetRunner(
             self.tmpdir,
-            builder=self.builder)
+            builder=self.builder,
+            env=self.builder.env)
 
         def local_listener(task, reason):
             if reason == "leave":
